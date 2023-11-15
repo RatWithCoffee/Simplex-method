@@ -1,7 +1,9 @@
 import java.util.Arrays;
 
+import static java.lang.Math.abs;
+
 // находит максимальное значение целевой функции
-public class Simplex {
+public class DualSimplex {
     private final int rows;
     private final int cols;
     private final double[][] table;
@@ -19,7 +21,7 @@ public class Simplex {
 
     // numOfConstraints - количество ограничений
     // numOfUnknowns - количество неизвестных
-    public Simplex(double[][] standardized, String[] basicVars, String[] allVars) {
+    public DualSimplex(double[][] standardized, String[] basicVars, String[] allVars) {
         rows = standardized.length;
         cols = standardized[0].length;
         table = Arrays.copyOf(standardized, rows);
@@ -87,20 +89,18 @@ public class Simplex {
     // подсчитывает значения в таблице
     // необходимо использовать в цикле до нахождения оптимального решения
     public SOLUTION compute() {
-        // проверим, является ли решение оптимальным
-        if (isOptimal()) {
+
+
+        // найдем разрешающую строку (переменная для исключения из базиса)
+        int pivotRow = findPivotRow();
+        if (pivotRow == -1) {
             return SOLUTION.IS_OPTIMAL;
         }
 
         // найдем разрешающий столбец (переменную для включения в базис)
-        int pivotColumn = findPivotColumn();
-        System.out.println("Разрешающий столбец: " + pivotColumn);
+        int pivotColumn = findPivotColumn(pivotRow);
 
-        // найдем разрешающую строку (переменная для исключения из базиса)
-        int pivotRow = findPivotRow(pivotColumn);
-        if (pivotRow == -1) {
-            return SOLUTION.UNBOUNDED;
-        }
+        System.out.println("Разрешающий столбец: " + pivotColumn);
         System.out.println("Разрешающая строка: " + pivotRow);
 
         // меняем обозначения свободной и базисной переменных
@@ -148,18 +148,13 @@ public class Simplex {
     }
 
     // находим индекс разрешающей строки (переменная для исключения из базиса)
-    private int findPivotRow(int pivotCol) {
-        double minVal = Double.MAX_VALUE; // минимальное значение, получаемое при решении уравнений
+    private int findPivotRow() {
         int indexMinVal = -1; // индекс новой свободной переменной
-        double partition;
+        double minValue = 0;
         for (int i = 1; i < rows; i++) {
-            partition = table[i][cols - 1] / table[i][pivotCol];
-            if (partition > 0 && partition < minVal) {
-                minVal = partition;
+            if (table[i][cols - 1] < minValue) {
+                minValue = table[i][cols - 1];
                 indexMinVal = i;
-            } else if (partition == 0 && table[i][pivotCol] > 0) {
-                indexMinVal = i;
-                return indexMinVal;
             }
         }
 
@@ -167,14 +162,13 @@ public class Simplex {
     }
 
 
-    // находит максимальное значение среди коэффициентов в целевой функции
-    // функция возвращает его индекс
-    private int findPivotColumn() {
-        double min = Double.MAX_VALUE;
+    // находит индекс разрешающего столбца (переменная для включения в базис)
+    private int findPivotColumn(int pivotRow) {
         int index = -1;
+        double minValue = Double.MAX_VALUE;
         for (int i = 0; i < cols - 1; i++) {
-            if (table[0][i] < min) {
-                min = table[0][i];
+            if (table[pivotRow][i] < 0 && table[0][i] / table[pivotRow][i] <= 0 && abs(table[0][i] / table[pivotRow][i]) < minValue) {
+                minValue = abs(table[0][i] / table[pivotRow][i]);
                 index = i;
             }
         }
@@ -182,15 +176,5 @@ public class Simplex {
         return index;
     }
 
-    // проверяет, является ли найденное решение оптимальным
-    public boolean isOptimal() {
-        for (int i = 0; i < cols - 1; i++) {
-            if (table[0][i] < 0) {
-                return false;
-            }
-        }
-
-        return true;
-    }
 
 }
