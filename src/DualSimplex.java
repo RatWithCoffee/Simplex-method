@@ -53,6 +53,11 @@ public class DualSimplex {
 
             counter++;
         }
+
+    }
+
+    public double[][] getTable() {
+        return table;
     }
 
 
@@ -78,7 +83,7 @@ public class DualSimplex {
                 System.out.print(basicVars[i - 1] + "\t\t");
             }
             for (int j = 0; j < cols; j++) {
-                String value = String.format("%.2f", table[i][j]);
+                String value = String.format("%.4f", table[i][j]);
                 System.out.print(value + "\t\t");
             }
             System.out.println();
@@ -89,8 +94,6 @@ public class DualSimplex {
     // подсчитывает значения в таблице
     // необходимо использовать в цикле до нахождения оптимального решения
     public SOLUTION compute() {
-
-
         // найдем разрешающую строку (переменная для исключения из базиса)
         int pivotRow = findPivotRow();
         if (pivotRow == -1) {
@@ -167,7 +170,7 @@ public class DualSimplex {
         int index = -1;
         double minValue = Double.MAX_VALUE;
         for (int i = 0; i < cols - 1; i++) {
-            if (table[pivotRow][i] < 0 && table[0][i] / table[pivotRow][i] <= 0 && abs(table[0][i] / table[pivotRow][i]) < minValue) {
+            if (table[pivotRow][i] < 0 && table[0][i] / table[pivotRow][i] >= 0 && abs(table[0][i] / table[pivotRow][i]) < minValue) {
                 minValue = abs(table[0][i] / table[pivotRow][i]);
                 index = i;
             }
